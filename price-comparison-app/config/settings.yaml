@@ -1,0 +1,96 @@
+# Price Comparison Application Configuration
+# Environment variables can be referenced using ${VAR_NAME}
+
+openai:
+  api_key: ${OPENAI_API_KEY}
+  model: gpt-4-turbo-preview
+  temperature: 0
+  max_tokens: 4096
+  request_timeout: 60
+
+mcp:
+  server_url: http://localhost:8000/mcp
+  timeout: 30
+  retry_attempts: 3
+  retry_delay: 1.0
+
+serper:
+  api_key: ${SERPER_API_KEY}
+  results_per_search: 20
+  country: "il"  # Israel by default
+  language: "he"
+
+agents:
+  max_retries: 3
+  timeout: 120
+  product_understanding:
+    name: "Product Understanding Agent"
+    description: "Analyzes product input and extracts structured information"
+  web_search:
+    name: "Web Search Agent"
+    description: "Searches the web for product listings"
+    min_urls: 10
+    max_urls: 30
+  price_extraction:
+    name: "Price Extraction Agent"
+    description: "Extracts pricing information from web pages"
+    concurrent_requests: 5
+  data_validation:
+    name: "Data Validation Agent"
+    description: "Validates extracted prices against product specifications"
+    min_relevance_score: 70
+  price_comparison:
+    name: "Price Comparison Agent"
+    description: "Analyzes and ranks validated prices"
+  reporting:
+    name: "Reporting Agent"
+    description: "Generates final user-friendly reports"
+
+scraping:
+  concurrent_requests: 5
+  rate_limit_delay: 1.0
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  timeout: 15
+  max_page_size: 5242880  # 5MB
+
+workflow:
+  min_urls_for_extraction: 5
+  min_prices_for_validation: 3
+  max_search_retries: 2
+  checkpoint_enabled: true
+
+logging:
+  level: INFO
+  format: "structured"  # or "plain"
+  file: null  # Set to path for file logging
+
+# Supported currencies for price normalization
+currencies:
+  - symbol: "₪"
+    code: "ILS"
+    name: "Israeli Shekel"
+  - symbol: "$"
+    code: "USD"
+    name: "US Dollar"
+  - symbol: "€"
+    code: "EUR"
+    name: "Euro"
+  - symbol: "£"
+    code: "GBP"
+    name: "British Pound"
+
+# Known e-commerce domains
+ecommerce_domains:
+  israel:
+    - "zap.co.il"
+    - "ivory.co.il"
+    - "ksp.co.il"
+    - "bug.co.il"
+    - "eilat.co.il"
+    - "lastprice.co.il"
+  international:
+    - "amazon.com"
+    - "ebay.com"
+    - "walmart.com"
+    - "aliexpress.com"
+    - "newegg.com"

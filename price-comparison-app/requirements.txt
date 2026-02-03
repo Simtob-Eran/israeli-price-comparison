@@ -1,0 +1,37 @@
+# Core dependencies
+langgraph==0.2.50
+langchain==0.3.12
+langchain-openai==0.2.10
+langchain-core==0.3.25
+openai==1.57.0
+
+# Data validation
+pydantic==2.10.3
+pydantic-settings==2.6.1
+
+# HTTP clients
+httpx==0.28.1
+aiohttp==3.11.10
+aiohttp-sse-client==0.2.1
+
+# CLI and output
+rich==13.9.4
+typer==0.14.0
+
+# Configuration
+pyyaml==6.0.2
+python-dotenv==1.0.1
+
+# Utilities
+tenacity==9.0.0
+structlog==24.4.0
+
+# Development dependencies
+pytest==8.3.4
+pytest-asyncio==0.24.0
+pytest-cov==6.0.0
+pytest-mock==3.14.0
+mypy==1.13.0
+ruff==0.8.2
+black==24.10.0
+pre-commit==4.0.1
