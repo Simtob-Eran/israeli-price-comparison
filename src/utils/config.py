@@ -1,47 +1,126 @@
 """Configuration management for the price comparison application.
 
-This module handles loading and validating configuration from YAML files
-and environment variables using Pydantic settings.
+This module handles loading and validating configuration from environment
+variables (.env file) and YAML files using Pydantic settings.
+
+Configuration Priority (highest to lowest):
+1. Environment variables
+2. .env file
+3. config/settings.yaml
+4. Default values
 """
 
 import os
+import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
 import yaml
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+# Load .env file from project root
+def _load_env_file() -> None:
+    """Load environment variables from .env file.
+
+    Searches for .env file in the following locations:
+    1. Current working directory
+    2. Project root (relative to this module)
+    """
+    # Try current working directory first
+    env_path = Path.cwd() / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+        return
+
+    # Try project root (relative to this module)
+    project_root = Path(__file__).parent.parent.parent
+    env_path = project_root / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+
+
+# Load .env on module import
+_load_env_file()
 
 
 class OpenAIConfig(BaseModel):
     """OpenAI API configuration."""
 
-    api_key: str = Field(default="", description="OpenAI API key")
-    model: str = Field(default="gpt-4-turbo-preview", description="Model to use")
-    temperature: float = Field(default=0, ge=0, le=2, description="Temperature")
-    max_tokens: int = Field(default=4096, ge=1, description="Max tokens")
-    request_timeout: int = Field(default=60, ge=1, description="Request timeout in seconds")
+    api_key: str = Field(
+        default_factory=lambda: os.getenv("OPENAI_API_KEY", ""),
+        description="OpenAI API key",
+    )
+    model: str = Field(
+        default_factory=lambda: os.getenv("OPENAI_MODEL", "gpt-4-turbo-preview"),
+        description="Model to use",
+    )
+    temperature: float = Field(
+        default_factory=lambda: float(os.getenv("OPENAI_TEMPERATURE", "0")),
+        ge=0,
+        le=2,
+        description="Temperature",
+    )
+    max_tokens: int = Field(
+        default_factory=lambda: int(os.getenv("OPENAI_MAX_TOKENS", "4096")),
+        ge=1,
+        description="Max tokens",
+    )
+    request_timeout: int = Field(
+        default_factory=lambda: int(os.getenv("OPENAI_REQUEST_TIMEOUT", "60")),
+        ge=1,
+        description="Request timeout in seconds",
+    )
 
 
 class MCPConfig(BaseModel):
     """MCP server configuration."""
 
     server_url: str = Field(
-        default="http://localhost:8000/mcp", description="MCP server URL"
+        default_factory=lambda: os.getenv("MCP_SERVER_URL", "http://localhost:8000/mcp"),
+        description="MCP server URL",
     )
-    timeout: int = Field(default=30, ge=1, description="Request timeout in seconds")
-    retry_attempts: int = Field(default=3, ge=1, description="Number of retry attempts")
-    retry_delay: float = Field(default=1.0, ge=0, description="Delay between retries")
+    timeout: int = Field(
+        default_factory=lambda: int(os.getenv("MCP_TIMEOUT", "30")),
+        ge=1,
+        description="Request timeout in seconds",
+    )
+    retry_attempts: int = Field(
+        default_factory=lambda: int(os.getenv("MCP_RETRY_ATTEMPTS", "3")),
+        ge=1,
+        description="Number of retry attempts",
+    )
+    retry_delay: float = Field(
+        default_factory=lambda: float(os.getenv("MCP_RETRY_DELAY", "1.0")),
+        ge=0,
+        description="Delay between retries",
+    )
 
 
 class SerperConfig(BaseModel):
     """Serper API configuration."""
 
-    api_key: str = Field(default="", description="Serper API key")
-    results_per_search: int = Field(default=20, ge=1, le=100, description="Results per search")
-    country: str = Field(default="il", description="Country code")
-    language: str = Field(default="he", description="Language code")
+    api_key: str = Field(
+        default_factory=lambda: os.getenv("SERPER_API_KEY", ""),
+        description="Serper API key",
+    )
+    results_per_search: int = Field(
+        default_factory=lambda: int(os.getenv("SERPER_RESULTS_PER_SEARCH", "20")),
+        ge=1,
+        le=100,
+        description="Results per search",
+    )
+    country: str = Field(
+        default_factory=lambda: os.getenv("SERPER_COUNTRY", "il"),
+        description="Country code",
+    )
+    language: str = Field(
+        default_factory=lambda: os.getenv("SERPER_LANGUAGE", "he"),
+        description="Language code",
+    )
 
 
 class AgentConfig(BaseModel):
@@ -58,8 +137,16 @@ class AgentConfig(BaseModel):
 class AgentsConfig(BaseModel):
     """Agents configuration."""
 
-    max_retries: int = Field(default=3, ge=1, description="Maximum retries")
-    timeout: int = Field(default=120, ge=1, description="Agent timeout in seconds")
+    max_retries: int = Field(
+        default_factory=lambda: int(os.getenv("AGENT_MAX_RETRIES", "3")),
+        ge=1,
+        description="Maximum retries",
+    )
+    timeout: int = Field(
+        default_factory=lambda: int(os.getenv("AGENT_TIMEOUT", "120")),
+        ge=1,
+        description="Agent timeout in seconds",
+    )
     product_understanding: AgentConfig = Field(
         default_factory=lambda: AgentConfig(
             name="Product Understanding Agent",
@@ -78,14 +165,14 @@ class AgentsConfig(BaseModel):
         default_factory=lambda: AgentConfig(
             name="Price Extraction Agent",
             description="Extracts pricing information from web pages",
-            concurrent_requests=5,
+            concurrent_requests=int(os.getenv("SCRAPING_CONCURRENT_REQUESTS", "5")),
         )
     )
     data_validation: AgentConfig = Field(
         default_factory=lambda: AgentConfig(
             name="Data Validation Agent",
             description="Validates extracted prices against product specifications",
-            min_relevance_score=70,
+            min_relevance_score=int(os.getenv("VALIDATION_MIN_RELEVANCE_SCORE", "70")),
         )
     )
     price_comparison: AgentConfig = Field(
@@ -105,31 +192,74 @@ class AgentsConfig(BaseModel):
 class ScrapingConfig(BaseModel):
     """Web scraping configuration."""
 
-    concurrent_requests: int = Field(default=5, ge=1, description="Concurrent requests")
-    rate_limit_delay: float = Field(default=1.0, ge=0, description="Rate limit delay")
+    concurrent_requests: int = Field(
+        default_factory=lambda: int(os.getenv("SCRAPING_CONCURRENT_REQUESTS", "5")),
+        ge=1,
+        description="Concurrent requests",
+    )
+    rate_limit_delay: float = Field(
+        default_factory=lambda: float(os.getenv("SCRAPING_RATE_LIMIT_DELAY", "1.0")),
+        ge=0,
+        description="Rate limit delay",
+    )
     user_agent: str = Field(
-        default="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        default_factory=lambda: os.getenv(
+            "SCRAPING_USER_AGENT",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        ),
         description="User agent string",
     )
-    timeout: int = Field(default=15, ge=1, description="Request timeout in seconds")
-    max_page_size: int = Field(default=5242880, ge=1, description="Max page size in bytes")
+    timeout: int = Field(
+        default_factory=lambda: int(os.getenv("SCRAPING_TIMEOUT", "15")),
+        ge=1,
+        description="Request timeout in seconds",
+    )
+    max_page_size: int = Field(
+        default_factory=lambda: int(os.getenv("SCRAPING_MAX_PAGE_SIZE", "5242880")),
+        ge=1,
+        description="Max page size in bytes",
+    )
 
 
 class WorkflowConfig(BaseModel):
     """Workflow configuration."""
 
-    min_urls_for_extraction: int = Field(default=5, ge=1, description="Min URLs for extraction")
-    min_prices_for_validation: int = Field(default=3, ge=1, description="Min prices for validation")
-    max_search_retries: int = Field(default=2, ge=0, description="Max search retries")
-    checkpoint_enabled: bool = Field(default=True, description="Enable checkpointing")
+    min_urls_for_extraction: int = Field(
+        default_factory=lambda: int(os.getenv("WORKFLOW_MIN_URLS", "5")),
+        ge=1,
+        description="Min URLs for extraction",
+    )
+    min_prices_for_validation: int = Field(
+        default_factory=lambda: int(os.getenv("WORKFLOW_MIN_PRICES", "3")),
+        ge=1,
+        description="Min prices for validation",
+    )
+    max_search_retries: int = Field(
+        default_factory=lambda: int(os.getenv("WORKFLOW_MAX_SEARCH_RETRIES", "2")),
+        ge=0,
+        description="Max search retries",
+    )
+    checkpoint_enabled: bool = Field(
+        default_factory=lambda: os.getenv("WORKFLOW_CHECKPOINT_ENABLED", "true").lower() == "true",
+        description="Enable checkpointing",
+    )
 
 
 class LoggingConfig(BaseModel):
     """Logging configuration."""
 
-    level: str = Field(default="INFO", description="Log level")
-    format: str = Field(default="structured", description="Log format (structured/plain)")
-    file: Optional[str] = Field(None, description="Log file path")
+    level: str = Field(
+        default_factory=lambda: os.getenv("LOG_LEVEL", "INFO"),
+        description="Log level",
+    )
+    format: str = Field(
+        default_factory=lambda: os.getenv("LOG_FORMAT", "structured"),
+        description="Log format (structured/plain)",
+    )
+    file: Optional[str] = Field(
+        default_factory=lambda: os.getenv("LOG_FILE") or None,
+        description="Log file path",
+    )
 
 
 class CurrencyConfig(BaseModel):
@@ -152,14 +282,16 @@ class Settings(BaseSettings):
 
     Settings are loaded in the following order of precedence:
     1. Environment variables (highest priority)
-    2. Configuration file (settings.yaml)
-    3. Default values (lowest priority)
+    2. .env file
+    3. Configuration file (settings.yaml)
+    4. Default values (lowest priority)
     """
 
     model_config = SettingsConfigDict(
-        env_prefix="PRICE_COMPARE_",
+        env_prefix="",
         env_nested_delimiter="__",
         case_sensitive=False,
+        extra="ignore",
     )
 
     openai: OpenAIConfig = Field(default_factory=OpenAIConfig)
@@ -175,6 +307,9 @@ class Settings(BaseSettings):
     @classmethod
     def from_yaml(cls, config_path: Optional[Path] = None) -> "Settings":
         """Load settings from a YAML configuration file.
+
+        Environment variables and .env file values take precedence over
+        YAML configuration.
 
         Args:
             config_path: Path to the configuration file. If not provided,
@@ -194,10 +329,10 @@ class Settings(BaseSettings):
             with open(config_path, encoding="utf-8") as f:
                 raw_config = yaml.safe_load(f) or {}
 
-            # Process environment variable substitutions
+            # Process environment variable substitutions in YAML
             config_data = _substitute_env_vars(raw_config)
 
-        # Merge with environment variables (env vars take precedence)
+        # Create settings - environment variables take precedence
         return cls(**config_data)
 
     def get_all_ecommerce_domains(self) -> list[str]:
@@ -217,6 +352,26 @@ class Settings(BaseSettings):
             if currency.symbol == symbol:
                 return currency
         return None
+
+    def print_config_summary(self) -> str:
+        """Generate a summary of current configuration for debugging.
+
+        Returns:
+            Formatted string with configuration summary.
+        """
+        lines = [
+            "Configuration Summary:",
+            "-" * 40,
+            f"OpenAI Model: {self.openai.model}",
+            f"OpenAI API Key: {'[SET]' if self.openai.api_key else '[NOT SET]'}",
+            f"MCP Server URL: {self.mcp.server_url}",
+            f"Serper API Key: {'[SET]' if self.serper.api_key else '[NOT SET]'}",
+            f"Log Level: {self.logging.level}",
+            f"Agent Max Retries: {self.agents.max_retries}",
+            f"Scraping Concurrent Requests: {self.scraping.concurrent_requests}",
+            "-" * 40,
+        ]
+        return "\n".join(lines)
 
 
 def _substitute_env_vars(config: dict[str, Any]) -> dict[str, Any]:
@@ -262,7 +417,6 @@ def _substitute_single_value(value: Any) -> Any:
         return value
 
     # Handle ${VAR_NAME} syntax
-    import re
     pattern = r"\$\{([^}]+)\}"
 
     def replace_env_var(match: re.Match[str]) -> str:
@@ -295,4 +449,5 @@ def reload_settings() -> Settings:
         Fresh Settings instance.
     """
     get_settings.cache_clear()
+    _load_env_file()  # Reload .env file
     return get_settings()
