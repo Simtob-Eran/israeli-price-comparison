@@ -14,12 +14,6 @@ mcp:
   retry_attempts: 3
   retry_delay: 1.0
 
-serper:
-  api_key: ${SERPER_API_KEY}
-  results_per_search: 20
-  country: "il"  # Israel by default
-  language: "he"
-
 agents:
   max_retries: 3
   timeout: 120

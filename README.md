@@ -75,7 +75,7 @@ A production-ready multi-agent price comparison system built with LangGraph and 
 Analyzes user input (product name or URL) and extracts structured product information including brand, model, specifications, and optimized search queries.
 
 ### 2. Web Search Agent
-Executes multiple search strategies using MCP tools (Serper API) to find product listings across Israeli and international e-commerce sites.
+Executes multiple search strategies using MCP tools to find product listings across Israeli and international e-commerce sites.
 
 ### 3. Price Extraction Agent
 Scrapes product pages concurrently to extract pricing information, handling various formats including Schema.org structured data and Hebrew price formats.
@@ -94,8 +94,7 @@ Generates comprehensive reports with comparison tables, recommendations, and ins
 ### Prerequisites
 - Python 3.11+
 - OpenAI API key
-- (Optional) Serper API key for web search
-- (Optional) MCP server for tool integration
+- MCP server for tool integration (web search, scraping)
 
 ### Setup
 
@@ -119,7 +118,7 @@ pip install -r requirements.txt
 4. Set up environment variables:
 ```bash
 export OPENAI_API_KEY="your-openai-api-key"
-export SERPER_API_KEY="your-serper-api-key"  # Optional
+export MCP_SERVER_URL="http://localhost:8000/mcp"
 ```
 
 5. (Optional) Configure settings:

@@ -217,7 +217,7 @@ class TestEndToEndWorkflow:
 
         # Test tool calls
         search_result = await mcp_client.call_tool(
-            "serper_search",
+            "web_search",
             {"query": "iPhone 15 Pro Max"},
         )
         assert "organic" in search_result
@@ -235,7 +235,7 @@ class TestMCPClientIntegration:
         await client.connect()
 
         result = await client.call_tool(
-            "serper_search",
+            "web_search",
             {"query": "test product"},
         )
 
@@ -249,7 +249,7 @@ class TestMCPClientIntegration:
         await client.connect()
 
         result = await client.call_tool(
-            "serper_shopping",
+            "shopping_search",
             {"query": "test product"},
         )
 
