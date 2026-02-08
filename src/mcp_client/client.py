@@ -585,9 +585,9 @@ class MockMCPClient(MCPClient):
         """Set up default mock responses."""
         # Mock tools
         self._tools = {
-            "serper_search": MCPToolDefinition(
-                name="serper_search",
-                description="Search the web using Serper API",
+            "web_search": MCPToolDefinition(
+                name="web_search",
+                description="Search the web",
                 input_schema={
                     "type": "object",
                     "properties": {
@@ -597,8 +597,8 @@ class MockMCPClient(MCPClient):
                     "required": ["query"],
                 },
             ),
-            "serper_shopping": MCPToolDefinition(
-                name="serper_shopping",
+            "shopping_search": MCPToolDefinition(
+                name="shopping_search",
                 description="Search for shopping results",
                 input_schema={
                     "type": "object",
@@ -635,8 +635,8 @@ class MockMCPClient(MCPClient):
 
         # Mock responses
         self._mock_responses = {
-            "serper_search": self._mock_search,
-            "serper_shopping": self._mock_shopping,
+            "web_search": self._mock_search,
+            "shopping_search": self._mock_shopping,
             "fetch_page_content": self._mock_fetch,
             "extract_structured_data": self._mock_extract,
         }

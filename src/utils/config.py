@@ -100,29 +100,6 @@ class MCPConfig(BaseModel):
     )
 
 
-class SerperConfig(BaseModel):
-    """Serper API configuration."""
-
-    api_key: str = Field(
-        default_factory=lambda: os.getenv("SERPER_API_KEY", ""),
-        description="Serper API key",
-    )
-    results_per_search: int = Field(
-        default_factory=lambda: int(os.getenv("SERPER_RESULTS_PER_SEARCH", "20")),
-        ge=1,
-        le=100,
-        description="Results per search",
-    )
-    country: str = Field(
-        default_factory=lambda: os.getenv("SERPER_COUNTRY", "il"),
-        description="Country code",
-    )
-    language: str = Field(
-        default_factory=lambda: os.getenv("SERPER_LANGUAGE", "he"),
-        description="Language code",
-    )
-
-
 class AgentConfig(BaseModel):
     """Individual agent configuration."""
 
@@ -296,7 +273,6 @@ class Settings(BaseSettings):
 
     openai: OpenAIConfig = Field(default_factory=OpenAIConfig)
     mcp: MCPConfig = Field(default_factory=MCPConfig)
-    serper: SerperConfig = Field(default_factory=SerperConfig)
     agents: AgentsConfig = Field(default_factory=AgentsConfig)
     scraping: ScrapingConfig = Field(default_factory=ScrapingConfig)
     workflow: WorkflowConfig = Field(default_factory=WorkflowConfig)
@@ -365,7 +341,6 @@ class Settings(BaseSettings):
             f"OpenAI Model: {self.openai.model}",
             f"OpenAI API Key: {'[SET]' if self.openai.api_key else '[NOT SET]'}",
             f"MCP Server URL: {self.mcp.server_url}",
-            f"Serper API Key: {'[SET]' if self.serper.api_key else '[NOT SET]'}",
             f"Log Level: {self.logging.level}",
             f"Agent Max Retries: {self.agents.max_retries}",
             f"Scraping Concurrent Requests: {self.scraping.concurrent_requests}",

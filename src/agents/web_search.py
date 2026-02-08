@@ -60,8 +60,8 @@ Your task is to search the web to find product listings for price comparison.
 - Prefer sites known for competitive pricing
 
 When using tools:
-- serper_search: For general web searches
-- serper_shopping: For shopping-specific results
+- web_search: For general web searches
+- shopping_search: For shopping-specific results
 
 Always explain your search strategy and summarize the results found."""
 
@@ -79,8 +79,8 @@ class SearchQuery(BaseModel):
 class WebSearchAgent:
     """Agent for executing intelligent web searches for product listings.
 
-    This agent uses MCP tools (Serper API) to search the web and find
-    product listings across multiple e-commerce platforms.
+    This agent uses MCP tools to search the web and find product listings
+    across multiple e-commerce platforms.
     """
 
     def __init__(
@@ -204,7 +204,7 @@ class WebSearchAgent:
         try:
             if self.mcp_client:
                 # Use MCP tools for search
-                tool_name = "serper_shopping" if search_type == "shopping" else "serper_search"
+                tool_name = "shopping_search" if search_type == "shopping" else "web_search"
                 response = await self.mcp_client.call_tool(
                     tool_name=tool_name,
                     arguments={"query": query, "num_results": 20},

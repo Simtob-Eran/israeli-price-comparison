@@ -24,7 +24,6 @@ def mock_settings() -> Settings:
     """Create mock settings for testing."""
     # Set test environment variables
     os.environ.setdefault("OPENAI_API_KEY", "test-api-key")
-    os.environ.setdefault("SERPER_API_KEY", "test-serper-key")
 
     return Settings.from_yaml()
 
@@ -182,8 +181,8 @@ def mock_mcp_client() -> MagicMock:
     mock.call_tool = AsyncMock()
     mock._connected = True
     mock._tools = {
-        "serper_search": MagicMock(),
-        "serper_shopping": MagicMock(),
+        "web_search": MagicMock(),
+        "shopping_search": MagicMock(),
         "fetch_page_content": MagicMock(),
     }
     return mock
