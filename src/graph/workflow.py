@@ -5,6 +5,7 @@ to perform end-to-end price comparison searches.
 """
 
 import time
+import uuid
 from datetime import datetime
 from typing import Any, Literal, Optional
 
@@ -525,12 +526,15 @@ class PriceComparisonWorkflow:
         self,
         user_input: str,
         config: Optional[dict[str, Any]] = None,
+        thread_id: Optional[str] = None,
     ) -> GraphState:
         """Execute the price comparison workflow.
 
         Args:
             user_input: User's product search input.
             config: Optional LangGraph configuration.
+            thread_id: Optional thread ID for checkpointing. If not provided,
+                      a random UUID will be generated.
 
         Returns:
             Final graph state with results.
@@ -542,10 +546,16 @@ class PriceComparisonWorkflow:
             # Create initial state
             initial_state = create_initial_state(user_input)
 
+            # Prepare config with thread_id for checkpointing
+            run_config = config or {}
+            if self.settings.workflow.checkpoint_enabled:
+                run_config["configurable"] = run_config.get("configurable", {})
+                run_config["configurable"]["thread_id"] = thread_id or str(uuid.uuid4())
+
             # Run the graph
             final_state = await self.graph.ainvoke(
                 initial_state.model_dump(),
-                config=config or {},
+                config=run_config,
             )
 
             # Convert back to GraphState
